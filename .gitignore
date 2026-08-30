@@ -25,3 +25,9 @@ dist-ssr
 
 out/
 .env
+data/db.json
+
+# Wails build output
+build/
+frontend/
+package.json.md5

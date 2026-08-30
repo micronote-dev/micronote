@@ -1,41 +1,69 @@
-import { getPath } from "@/models/path";
-import { useEffect, useState } from "react";
+import { getPath, makePath, makeDir as makeDirPath } from "@/models/path";
+import { useCallback, useRef, useState } from "react";
 import { TreeType } from "./components/app.constants";
 import { makeUUID } from "@/utils/uuid";
+import { api } from "@/lib/bridge";
 
 export const useAppFacade = () => {
-  const [isPathSelectDialogOpen, setIsPathSelectDialogOpen] = useState(false);
   const [trees, setTree] = useState<TreeType[] | null>(null);
-    useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        // setOpen((open) => !open)
-      }
-    }
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
- 
-  const getTree = async () => {
-    getPath().then(({ path }) => {
-      window.api.appBoot(path).then((res) => {
-        const tr = res as TreeType[];
-        function attachIds(trees: TreeType[]): TreeType[] {
-          return trees?.map((tree) => {
-            if (tree.type === TreeType.FILE) {
-              return { ...tree, id: makeUUID() };
+  const [treeError, setTreeError] = useState<string | null>(null);
+  // Stable path→UUID map so that UUIDs don't change across fetchTrees calls.
+  // A rename changes the path and therefore gets a fresh UUID; all other
+  // operations (create, delete, move into a different directory) preserve
+  // the UUIDs of unaffected nodes, keeping open-editor routes valid.
+  const pathToId = useRef<Record<string, string>>({});
+
+  const fetchTrees = useCallback(async () => {
+    setTreeError(null);
+    try {
+      const { path } = await getPath();
+      if (!path) { setTree([]); return; }
+      try {
+        const res = await api.appBoot(path) as TreeType[];
+        function attachIds(nodes: TreeType[]): TreeType[] {
+          return nodes?.map((node) => {
+            if (!pathToId.current[node.path]) {
+              pathToId.current[node.path] = makeUUID();
             }
-            return { ...tree, id: makeUUID(), children: attachIds(tree.children || []) };
+            const id = pathToId.current[node.path]!;
+            if (node.type === TreeType.FILE) return { ...node, id };
+            return { ...node, id, children: attachIds(node.children || []) };
           });
         }
+        setTree(attachIds(res));
+      } catch (error) {
+        setTree([]);
+        setTreeError(`Unable to read the selected folder: ${String(error)}`);
+      }
+    } catch (error) {
+      setTree([]);
+      setTreeError(`Unable to load workspace settings: ${String(error)}`);
+    }
+  }, []);
 
-        setTree(attachIds(tr));
-      });
-    });
-  };
-  useEffect(() => {
-    getTree();
-  }, [isPathSelectDialogOpen]);
-  return { isPathSelectDialogOpen, setIsPathSelectDialogOpen, trees };
+  const createFile = useCallback(async (path: string) => {
+    await makePath(path);
+  }, []);
+
+  const makeDir = useCallback(async (path: string) => {
+    await makeDirPath(path);
+  }, []);
+
+  const renameEntry = useCallback(async (oldPath: string, newPath: string) => {
+    await api.renameEntry(oldPath, newPath);
+  }, []);
+
+  const deleteEntry = useCallback(async (path: string) => {
+    await api.deleteEntry(path);
+  }, []);
+
+  const moveEntry = useCallback(async (src: string, dst: string) => {
+    await api.moveEntry(src, dst);
+  }, []);
+
+  const copyEntry = useCallback(async (src: string, dst: string) => {
+    await api.copyEntry(src, dst);
+  }, []);
+
+  return { trees, treeError, fetchTrees, createFile, makeDir, renameEntry, deleteEntry, moveEntry, copyEntry, toggleFullscreen: api.toggleFullscreen };
 };

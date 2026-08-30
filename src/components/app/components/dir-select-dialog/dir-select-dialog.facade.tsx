@@ -1,25 +1,28 @@
 import { setPath } from "@/models/path";
+import { api } from "@/lib/bridge";
 import { useState } from "react";
 
-
-
-
 type Props = {
-    onClose: () => void;    
+    onClose: () => void;
 };
 export const useDirSelectDialogFacade = ({ onClose }: Props) => {
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const handleSelectPath = async () => {
-    const path = await window.api.selectFolder();
-    setSelectedPath(path);
+    setError(null);
+    setIsSelecting(true);
+    try {
+      const path = await api.selectFolder();
+      if (!path) return;
+      await setPath(path);
+      onClose();
+    } catch (selectionError) {
+      setError(`Unable to save the selected folder: ${String(selectionError)}`);
+    } finally {
+      setIsSelecting(false);
+    }
   };
 
-  const handleSetNotePath = () => {
-    if (!selectedPath) return;
-    setPath(selectedPath);
-    onClose()
-  };
-
-  return { selectedPath, handleSelectPath, handleSetNotePath };
+  return { handleSelectPath, error, isSelecting };
 };

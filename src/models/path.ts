@@ -1,5 +1,4 @@
-import { DB_PATH } from "./models";
-
+import { api } from "@/lib/bridge";
 
 export interface Project {
   id: string;
@@ -7,10 +6,17 @@ export interface Project {
 }
 
 export const setPath = async (val: string) => {
-  await window.api.writeJSON(DB_PATH, { path: val });
+  await api.setWorkspacePath(val);
 };
 
-export const getPath = async ( ) => {
-  const data = await window.api.readJSON(DB_PATH)
-  return {path: data.path as string};
+export const getPath = async () => {
+  return { path: await api.getWorkspacePath() };
+}
+
+export const makePath = async (path: string) => {
+  await api.writeText(path, "")
+}
+
+export const makeDir = async (path: string) => {
+  await api.makeDir(path);
 }
