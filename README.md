@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# Micro Note
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A keyboard-driven Markdown note-taking app for the desktop, built for Vimmers.
 
-Currently, two official plugins are available:
+Built with [Wails](https://wails.io/) (Go + React), [Milkdown](https://milkdown.dev/), and Tailwind CSS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Vim mode** — full Vim keybindings inside the editor via Milkdown's Vim plugin
+- **Vim-style file tree navigation** — `h/j/k/l` to move, `a` to create, `r` to rename, `d` to delete, `y/p/x` to copy/paste/cut
+- **Space leader shortcuts** — `Space+E` to toggle the sidebar, and more
+- **Issue tracking** — lightweight Kanban board using `.mtf` files stored alongside your notes
+- **Full-screen toggle** — distraction-free writing
+- **Search** — fuzzy file search across the workspace
+- **JSON config** — override keybindings via `~/.config/micro-note/config.json`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requirements
 
-## Expanding the ESLint configuration
+- [Go](https://go.dev/) 1.21+
+- [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2
+- Node.js 18+ and npm
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Install the Wails CLI:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+wails dev
 ```
+
+This starts the Go backend and the Vite dev server together with hot reload.
+
+## Build
+
+```sh
+wails build
+```
+
+The compiled app is written to `build/bin/`.
+
+## Keybindings
+
+### App
+
+| Action | Default |
+|---|---|
+| Toggle sidebar / focus tree | `Space E` |
+| New file | `Cmd N` |
+| Open folder | `Cmd O` |
+| Focus editor | `Cmd I` |
+| Close file | `Cmd W` |
+| Toggle full screen | `Cmd Shift F` |
+| Toggle Vim mode | `Cmd Shift V` |
+| Open cheat sheet | `Cmd ,` |
+
+### File tree (when tree is focused)
+
+| Action | Key |
+|---|---|
+| Move up / down | `k` / `j` |
+| Expand / collapse | `l` / `h` |
+| Open file | `Enter` |
+| New file | `a` |
+| Rename | `r` |
+| Delete | `d` |
+| Cut / Copy / Paste | `x` / `y` / `p` |
+
+### Vim mode (editor)
+
+| Action | Key |
+|---|---|
+| Enter insert mode | `i` |
+| Enter visual mode | `v` / `V` |
+| Return to normal mode | `Esc` / `Ctrl C` |
+
+## Configuration
+
+Keybindings can be overridden by creating `~/.config/micro-note/config.json`:
+
+```json
+{
+  "keybindings": {
+    "toggleSidebar": "Space+E",
+    "newFile": "Cmd+N",
+    "openDirectory": "Cmd+O",
+    "focusEditor": "Cmd+I",
+    "closeFile": "Cmd+W",
+    "toggleFullscreen": "Cmd+Shift+F",
+    "toggleVimMode": "Cmd+Shift+V",
+    "openSettings": "Cmd+,"
+  }
+}
+```
+
+Only the keys you specify are overridden; the rest keep their defaults.
+
+## License
+
+MIT
