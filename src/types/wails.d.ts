@@ -20,6 +20,7 @@ interface Window {
         MoveEntry(src: string, dst: string): Promise<void>;
         ClipboardGetText(): Promise<string>;
         CopyEntry(src: string, dst: string): Promise<void>;
+        GetConfig(): Promise<{ keybindings?: Record<string, string> }>;
         ListIssues(workspacePath: string): Promise<Issue[]>;
         ReadIssue(path: string, position: number): Promise<Issue>;
         CreateIssue(workspacePath: string, title: string): Promise<Issue>;
