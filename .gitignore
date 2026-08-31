@@ -28,6 +28,7 @@ out/
 data/db.json
 
 # Wails build output
-build/
+build/bin/
+build/windows/
 frontend/
 package.json.md5
